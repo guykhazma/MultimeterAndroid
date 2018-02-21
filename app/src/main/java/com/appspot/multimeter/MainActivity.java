@@ -148,12 +148,11 @@ public class MainActivity extends AppCompatActivity {
         public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
             final BluetoothDevice device = mLeDeviceListAdapter.getDevice(position);
             if (device == null) return;
-            /*
-            final Intent intent = new Intent(this, DeviceControlActivity.class);
-            intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
-            intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
+            // Move to Multimeter activity
+            final Intent intent = new Intent(MainActivity.this, Multimeter.class);
+            intent.putExtra(Multimeter.EXTRAS_DEVICE_NAME, device.getName());
+            intent.putExtra(Multimeter.EXTRAS_DEVICE_ADDRESS, device.getAddress());
             startActivity(intent);
-            */
         }
     };
 
