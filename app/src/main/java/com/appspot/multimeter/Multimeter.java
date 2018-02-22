@@ -71,7 +71,7 @@ public class Multimeter extends AppCompatActivity {
 
                     break;
                 case OFF_STATE:
-
+                    // deal
                     break;
                 case V3_STATE:
 
