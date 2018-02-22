@@ -30,23 +30,26 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
+        android:id="@+id/txtValue"
+        android:layout_width="305dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginStart="12dp"
         android:layout_marginTop="8dp"
-        android:text="Value"
-        android:textColor="@android:color/background_light"
-        android:textSize="24sp"
+        android:background="@drawable/measback"
+        android:paddingHorizontal="3dp"
+        android:text="1"
+        android:textColor="@android:color/background_dark"
+        android:textSize="50sp"
         app:layout_constraintBottom_toTopOf="@+id/knob"
-        app:layout_constraintHorizontal_bias="0.501"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.185" />
+        app:layout_constraintVertical_bias="0.206" />
 
     <ImageButton
-        android:id="@+id/imageButton2"
+        android:id="@+id/btnHold"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="44dp"
@@ -65,7 +68,7 @@
         android:textColor="@android:color/background_light"
         android:textSize="15sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageButton2" />
+        app:layout_constraintTop_toBottomOf="@+id/btnHold" />
 
     <ImageView
         android:id="@+id/imageView2"
@@ -73,11 +76,11 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="48dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageButton3"
+        app:layout_constraintTop_toBottomOf="@+id/btnDim"
         app:srcCompat="@drawable/wheel" />
 
     <ImageButton
-        android:id="@+id/imageButton3"
+        android:id="@+id/btnDim"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="40dp"
@@ -86,5 +89,16 @@
         app:layout_constraintBottom_toTopOf="@+id/knob"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@drawable/btn2_selector" />
+
+    <TextView
+        android:id="@+id/txtUnits"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="30dp"
+        android:layout_marginTop="80dp"
+        android:text="mV"
+        android:textColor="@android:color/background_dark"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </android.support.constraint.ConstraintLayout>
