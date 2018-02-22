@@ -10,18 +10,21 @@
         android:id="@+id/knob"
         android:layout_width="300dp"
         android:layout_height="300dp"
-        android:layout_marginTop="192dp"
+        android:layout_marginTop="248dp"
+        app:kCircularIndicatorRelativePosition="0"
+        app:kCircularIndicatorRelativeRadius="0.1"
         app:kDefaultState="2"
+        app:kIndicatorColor="#80FFFFFF"
         app:kIndicatorRelativeLength="1"
-        app:kKnobColor="@android:color/white"
-        app:kKnobDrawableRotates="false"
         app:kIndicatorWidth="5dp"
         app:kKnobCenterRelativeRadius="0.1"
         app:kKnobDrawable="@drawable/multimeter"
+        app:kKnobDrawableRotates="false"
         app:kKnobRelativeRadius="1"
         app:kMaxAngle="90"
         app:kMinAngle="-90"
         app:kNumberOfStates="5"
+        app:kSelectedStateMarkerColor="@android:color/white"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -33,9 +36,55 @@
         android:layout_marginBottom="8dp"
         android:layout_marginTop="8dp"
         android:text="Value"
+        android:textColor="@android:color/background_light"
         android:textSize="24sp"
         app:layout_constraintBottom_toTopOf="@+id/knob"
+        app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.185" />
+
+    <ImageButton
+        android:id="@+id/imageButton2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="44dp"
+        android:layout_marginLeft="40dp"
+        android:background="@null"
+        app:layout_constraintBottom_toTopOf="@+id/knob"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:srcCompat="@drawable/btn_selector" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:text="HOLD"
+        android:textColor="@android:color/background_light"
+        android:textSize="15sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageButton2" />
+
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageButton3"
+        app:srcCompat="@drawable/wheel" />
+
+    <ImageButton
+        android:id="@+id/imageButton3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="40dp"
+        android:layout_marginEnd="40dp"
+        android:background="@null"
+        app:layout_constraintBottom_toTopOf="@+id/knob"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/btn2_selector" />
+
 </android.support.constraint.ConstraintLayout>
