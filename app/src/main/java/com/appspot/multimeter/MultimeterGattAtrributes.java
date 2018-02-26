@@ -26,6 +26,10 @@ public class MultimeterGattAtrributes {
     public static String HEART_RATE_MEASUREMENT = "00002a37-0000-1000-8000-00805f9b34fb";
     public static String CLIENT_CHARACTERISTIC_CONFIG = "00002902-0000-1000-8000-00805f9b34fb";
 
+    public static String MULTIMETER_SERVICE = "0000fff0-0000-1000-8000-00805f9b34fb";
+    public static String MEASUREMENT = "0000fff4-0000-1000-8000-00805f9b34fb";
+    public static String MODE = "0000fff1-0000-1000-8000-00805f9b34fb";
+
     static {
         // Sample Services.
         attributes.put("0000180d-0000-1000-8000-00805f9b34fb", "Heart Rate Service");
