@@ -1,7 +1,6 @@
 package com.appspot.multimeter;
 
 
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
@@ -11,13 +10,16 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.IBinder;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.UUID;
 
@@ -29,7 +31,7 @@ public class Multimeter extends AppCompatActivity {
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
 
     // knob states
-    public static final int EXIT_STATE = 0;
+    public static final int R_STATE = 0;
     public static final int MA500_STATE = 1;
     public static final int OFF_STATE = 2;
     public static final int V3_STATE = 3;
@@ -38,12 +40,14 @@ public class Multimeter extends AppCompatActivity {
 
     private Knob knob;
     private TextView value;
+    private TextView units;
+    private TextView hold;
 
     private BluetoothLeService mBluetoothLeService;
     private String mDeviceName;
     private String mDeviceAddress;
     private boolean mConnected = false;
-
+    private boolean mIsOff = true;
 
     private static final String TAG = Multimeter.class.getSimpleName();
 
@@ -82,8 +86,8 @@ public class Multimeter extends AppCompatActivity {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
+                knob.setEnabled(true);
                 //updateConnectionState(R.string.connected);
-                invalidateOptionsMenu();
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = false;
                 // open intro activity and close current activity
@@ -98,17 +102,73 @@ public class Multimeter extends AppCompatActivity {
                 BluetoothGattService multimeterService =
                         mBluetoothLeService.getService(UUID.fromString(MultimeterGattAtrributes.MULTIMETER_SERVICE));
                 mModeCharacteristic =
-                        multimeterService.getCharacteristic(UUID.fromString(MultimeterGattAtrributes.MODE));
+                        multimeterService.getCharacteristic(UUID.fromString(MultimeterGattAtrributes.MULTIMETER_MODE));
                 mBluetoothLeService.readCharacteristic(mModeCharacteristic);
                 mMeasurementCharacteristic =
-                        multimeterService.getCharacteristic(UUID.fromString(MultimeterGattAtrributes.MEASUREMENT));
-                //subscribe notifications
-                mBluetoothLeService.setCharacteristicNotification(mMeasurementCharacteristic, true);
+                        multimeterService.getCharacteristic(UUID.fromString(MultimeterGattAtrributes.MULTIMETER_MEASUREMENT));
                 // Show all the supported services and characteristics on the user interface.
                 //displayGattServices(mBluetoothLeService.getSupportedGattServices());
-            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+            } else if (BluetoothLeService.ACTION_MODE_AVAILABLE.equals(action)) {
+                int mode = intent.getIntExtra(BluetoothLeService.DATA,-1);
+                int knobnewState = -1;
                 //set mode
-                //displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+                if (mode == -1) {
+                    // should not get here
+                    Toast.makeText(getApplicationContext(), "Error occured - Invalid mode", Toast.LENGTH_SHORT).show();
+                }
+                else if (mode == 0) {
+                    mIsOff = true;
+                    knobnewState = OFF_STATE;
+                    units.setText("");
+                    value.setBackgroundResource(R.drawable.measbackoff);
+                    hold.setTextColor(Color.WHITE);
+                    //unsubscribe notifications
+                    mBluetoothLeService.setCharacteristicNotification(mMeasurementCharacteristic, false);
+                }
+                else {
+                    value.setBackgroundResource(R.drawable.measback);
+                    if (mode == 4) {
+                        knobnewState = R_STATE;
+                        units.setText("Ω");
+                    }
+                    else if (mode == 3) {
+                        knobnewState = MA500_STATE;
+                        units.setText("mA");
+                    }
+                    else {
+                        units.setText("V");
+                        if (mode == 1) {
+                            knobnewState = V3_STATE;
+                        }
+                        else {
+                            knobnewState = V10_STATE;
+                        }
+                    }
+                    if(mIsOff) {
+                        //subscribe notifications
+                        mBluetoothLeService.setCharacteristicNotification(mMeasurementCharacteristic, true);
+                        mIsOff = true;
+                    }
+                    else {
+                        knob.setEnabled(true);
+                    }
+                }
+                if (knobnewState != knob.getState()) {
+                    knob.setState(knobnewState);
+                }
+            } else if (BluetoothLeService.ACTION_MEASUREMENT_AVAILABLE.equals(action)) {
+                double measValue;
+                measValue = (double) intent.getLongExtra(BluetoothLeService.DATA,-1) / 1000000;
+                // update multimeter value
+                value.setText("" + measValue);
+            } else if (BluetoothLeService.ACTION_NOTIFICATION_ENABLED.equals(action)) {
+                if(mIsOff) {
+                    value.setText("");
+                }
+                else {
+                    value.setText("0.00");
+                }
+                knob.setEnabled(true);
             }
         }
     };
@@ -121,12 +181,14 @@ public class Multimeter extends AppCompatActivity {
         // init knob
         knob = (Knob) findViewById(R.id.knob);
         knob.setOnStateChanged(knobChanged);
+        knob.setEnabled(false);
         value = (TextView) findViewById(R.id.txtValue);
+        units = (TextView) findViewById(R.id.txtUnits);
+        hold = (TextView) findViewById(R.id.txthold);
 
         // set value font
         Typeface myTypeface = Typeface.createFromAsset(getAssets(), "fonts/digital.ttf");
         value.setTypeface(myTypeface);
-        value.setText("123456789");
 
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
@@ -163,47 +225,55 @@ public class Multimeter extends AppCompatActivity {
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.ACTION_MEASUREMENT_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.ACTION_MODE_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.ACTION_NOTIFICATION_ENABLED);
         return intentFilter;
     }
 
     Knob.OnStateChanged knobChanged = new Knob.OnStateChanged() {
         @Override
         public void onState(int state) {
+            knob.setEnabled(false);
             switch (state) {
-                case EXIT_STATE:
-                    // Disconnect and return to intro page
-                    AlertDialog.Builder builder = new AlertDialog.Builder(Multimeter.this);
-                    builder.setMessage("Exit Multimeter?").setTitle("Please confirm exit");
-                    builder.setPositiveButton("Exit", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            mBluetoothLeService.disconnect();
-                        }
-                    });
-                    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            // User cancelled the dialog
-                        }
-                    });
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
+                case R_STATE:
+                    Toast.makeText(getApplicationContext(), "Option not supported yet", Toast.LENGTH_SHORT).show();
+                    mBluetoothLeService.writeCharacteristic(mModeCharacteristic,  4);
                     break;
                 case MA500_STATE:
-                    mBluetoothLeService.writeCharacteristic(mModeCharacteristic, (byte) 3);
+                    mBluetoothLeService.writeCharacteristic(mModeCharacteristic,  3);
                     break;
                 case OFF_STATE:
-                    mBluetoothLeService.writeCharacteristic(mModeCharacteristic, (byte) 0);
+                    mBluetoothLeService.writeCharacteristic(mModeCharacteristic,  0);
                     // deal
                     break;
                 case V3_STATE:
-                    mBluetoothLeService.writeCharacteristic(mModeCharacteristic, (byte) 1);
+                    mBluetoothLeService.writeCharacteristic(mModeCharacteristic,  1);
                     break;
                 case V10_STATE:
-                    mBluetoothLeService.writeCharacteristic(mModeCharacteristic, (byte) 2);
+                    mBluetoothLeService.writeCharacteristic(mModeCharacteristic,  2);
                     break;
                 default:
                     break;
             }
         }
     };
+
+    public void exitOnClick(View v){
+        // Disconnect and return to intro page
+        AlertDialog.Builder builder = new AlertDialog.Builder(Multimeter.this);
+        builder.setMessage("Exit Multimeter?").setTitle("Please confirm exit");
+        builder.setPositiveButton("Exit", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                mBluetoothLeService.disconnect();
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+            }
+        });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
 }

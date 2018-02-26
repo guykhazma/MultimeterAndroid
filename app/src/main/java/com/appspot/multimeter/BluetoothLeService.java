@@ -32,8 +32,12 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.UUID;
+
+import static android.bluetooth.BluetoothGattCharacteristic.FORMAT_UINT32;
+import static android.bluetooth.BluetoothGattCharacteristic.FORMAT_UINT8;
 
 /**
  * Service for managing connection and data communication with a GATT server hosted on a
@@ -58,13 +62,19 @@ public class BluetoothLeService extends Service {
             "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED";
     public final static String ACTION_GATT_SERVICES_DISCOVERED =
             "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
-    public final static String ACTION_DATA_AVAILABLE =
-            "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
-    public final static String EXTRA_DATA =
-            "com.example.bluetooth.le.EXTRA_DATA";
+    public final static String ACTION_MEASUREMENT_AVAILABLE =
+            "com.example.bluetooth.le.ACTION_MEASUREMENT_AVAILABLE";
+    public final static String ACTION_MODE_AVAILABLE =
+            "com.example.bluetooth.le.ACTION_MODE_AVAILABLE";
+    public final static String ACTION_NOTIFICATION_ENABLED =
+            "com.example.bluetooth.le.ACTION_NOTIFICATION_ENABLED";
+    public final static String CHARACTERISTIC_UUID =
+            "com.example.bluetooth.le.CHARACTERISTIC_UUID";
+    public final static String DATA =
+            "com.example.bluetooth.le.DATA";
 
-    public final static UUID UUID_HEART_RATE_MEASUREMENT =
-            UUID.fromString(MultimeterGattAtrributes.HEART_RATE_MEASUREMENT);
+    public final static UUID UUID_MULTIMETER_MEASUREMENT =
+            UUID.fromString(MultimeterGattAtrributes.MULTIMETER_MEASUREMENT);
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
@@ -103,52 +113,56 @@ public class BluetoothLeService extends Service {
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+                final Intent intent = new Intent(ACTION_MODE_AVAILABLE);
+                final int data = characteristic.getIntValue(FORMAT_UINT8, 0);
+                intent.putExtra(CHARACTERISTIC_UUID, characteristic.getUuid());
+                intent.putExtra(DATA, data);
+                sendBroadcast(intent);
             }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            super.onCharacteristicWrite(gatt, characteristic, status);
+            final Intent intent = new Intent(ACTION_MODE_AVAILABLE);
+            final int data = characteristic.getIntValue(FORMAT_UINT8, 0);
+            intent.putExtra(CHARACTERISTIC_UUID, characteristic.getUuid());
+            intent.putExtra(DATA, data);
+            sendBroadcast(intent);
+        }
+
+        @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            super.onDescriptorWrite(gatt, descriptor, status);
+            String intentAction = ACTION_NOTIFICATION_ENABLED;
+            broadcastUpdate(intentAction);
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-            broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+            final Intent intent = new Intent(ACTION_MEASUREMENT_AVAILABLE);
+            final long data = unsignedIntToLong(characteristic.getValue());
+            intent.putExtra(CHARACTERISTIC_UUID, characteristic.getUuid());
+            intent.putExtra(DATA, data);
+            sendBroadcast(intent);
         }
     };
 
-    private void broadcastUpdate(final String action) {
-        final Intent intent = new Intent(action);
-        sendBroadcast(intent);
+    public static final long unsignedIntToLong(byte[] b) {
+        long l = 0;
+        l |= b[0] & 0xFF;
+        l <<= 8;
+        l |= b[1] & 0xFF;
+        l <<= 8;
+        l |= b[2] & 0xFF;
+        l <<= 8;
+        l |= b[3] & 0xFF;
+        return l;
     }
 
-    private void broadcastUpdate(final String action,
-                                 final BluetoothGattCharacteristic characteristic) {
+    private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
-
-        // This is special handling for the Heart Rate Measurement profile.  Data parsing is
-        // carried out as per profile specifications:
-        // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
-        if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
-            int flag = characteristic.getProperties();
-            int format = -1;
-            if ((flag & 0x01) != 0) {
-                format = BluetoothGattCharacteristic.FORMAT_UINT16;
-                Log.d(TAG, "Heart rate format UINT16.");
-            } else {
-                format = BluetoothGattCharacteristic.FORMAT_UINT8;
-                Log.d(TAG, "Heart rate format UINT8.");
-            }
-            final int heartRate = characteristic.getIntValue(format, 1);
-            Log.d(TAG, String.format("Received heart rate: %d", heartRate));
-            intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
-        } else {
-            // For all other profiles, writes the data formatted in HEX.
-            final byte[] data = characteristic.getValue();
-            if (data != null && data.length > 0) {
-                final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for(byte byteChar : data)
-                    stringBuilder.append(String.format("%02X ", byteChar));
-                intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
-            }
-        }
         sendBroadcast(intent);
     }
 
@@ -289,12 +303,12 @@ public class BluetoothLeService extends Service {
      *
      * @param characteristic The characteristic to read from.
      */
-    public void writeCharacteristic(BluetoothGattCharacteristic characteristic, byte value) {
+    public void writeCharacteristic(BluetoothGattCharacteristic characteristic, int value) {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
-        characteristic.setValue(new byte[] {value});
+        characteristic.setValue(value, FORMAT_UINT8, 0);
         mBluetoothGatt.writeCharacteristic(characteristic);
     }
 
