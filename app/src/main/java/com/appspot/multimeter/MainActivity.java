@@ -6,13 +6,16 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.opengl.Visibility;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -43,6 +46,15 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_BT = 1;
     // Stops scanning after 5 seconds.
     private static final long SCAN_PERIOD = 5000;
+
+    private static List<ScanFilter> filters;
+    private static ScanSettings settings;
+    static {
+        ScanFilter filer = new ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(MultimeterGattAtrributes.MULTIMETER_SERVICE)).build();
+        filters = new ArrayList<ScanFilter>();
+        filters.add(filer);
+        settings = new ScanSettings.Builder().build();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,7 +149,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }, SCAN_PERIOD);
             mProgressDlg.show();
-            mBluetoothAdapter.getBluetoothLeScanner().startScan(mLeScanCallback);
+            //mBluetoothAdapter.getBluetoothLeScanner().startScan(mLeScanCallback);
+            mBluetoothAdapter.getBluetoothLeScanner().startScan(filters, settings, mLeScanCallback);
         } else {
             mBluetoothAdapter.getBluetoothLeScanner().stopScan(mLeScanCallback);
             mProgressDlg.dismiss();
