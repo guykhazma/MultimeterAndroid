@@ -33,7 +33,7 @@ public class Multimeter extends AppCompatActivity {
     public static final int MA500_STATE = 1;
     public static final int OFF_STATE = 2;
     public static final int V3_STATE = 3;
-    public static final int V5_STATE = 4;
+    public static final int V10_STATE = 4;
 
 
     private Knob knob;
@@ -198,7 +198,7 @@ public class Multimeter extends AppCompatActivity {
                 case V3_STATE:
                     mBluetoothLeService.writeCharacteristic(mModeCharacteristic, (byte) 1);
                     break;
-                case V5_STATE:
+                case V10_STATE:
                     mBluetoothLeService.writeCharacteristic(mModeCharacteristic, (byte) 2);
                     break;
                 default:
