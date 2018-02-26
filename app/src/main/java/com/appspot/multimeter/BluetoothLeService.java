@@ -283,6 +283,22 @@ public class BluetoothLeService extends Service {
     }
 
     /**
+     * Request a read on a given {@code BluetoothGattCharacteristic}. The read result is reported
+     * asynchronously through the {@code BluetoothGattCallback#onCharacteristicRead(android.bluetooth.BluetoothGatt, android.bluetooth.BluetoothGattCharacteristic, int)}
+     * callback.
+     *
+     * @param characteristic The characteristic to read from.
+     */
+    public void writeCharacteristic(BluetoothGattCharacteristic characteristic, byte value) {
+        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
+            Log.w(TAG, "BluetoothAdapter not initialized");
+            return;
+        }
+        characteristic.setValue(new byte[] {value});
+        mBluetoothGatt.writeCharacteristic(characteristic);
+    }
+
+    /**
      * Enables or disables notification on a give characteristic.
      *
      * @param characteristic Characteristic to act on.
@@ -297,12 +313,12 @@ public class BluetoothLeService extends Service {
         mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
 
         // This is specific to Heart Rate Measurement.
-        if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
+        //if (UUID_HEART_RATE_MEASUREMENT.equals(characteristic.getUuid())) {
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
                     UUID.fromString(MultimeterGattAtrributes.CLIENT_CHARACTERISTIC_CONFIG));
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             mBluetoothGatt.writeDescriptor(descriptor);
-        }
+        //}
     }
 
     /**
@@ -315,5 +331,10 @@ public class BluetoothLeService extends Service {
         if (mBluetoothGatt == null) return null;
 
         return mBluetoothGatt.getServices();
+    }
+
+    public BluetoothGattService getService(UUID uuid) {
+        if (mBluetoothGatt == null) return null;
+        return mBluetoothGatt.getService(uuid);
     }
 }

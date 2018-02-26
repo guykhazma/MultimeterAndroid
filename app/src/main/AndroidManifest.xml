@@ -33,6 +33,7 @@
             android:screenOrientation="portrait"
             android:theme="@style/FullscreenThemeNoTitleBar">
         </activity>
+        <service android:name=".BluetoothLeService" android:enabled="true"/>
     </application>
 
 </manifest>
