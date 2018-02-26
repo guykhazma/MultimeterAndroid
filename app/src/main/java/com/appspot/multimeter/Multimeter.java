@@ -145,9 +145,9 @@ public class Multimeter extends AppCompatActivity {
                         }
                     }
                     if(mIsOff) {
+                        mIsOff = false;
                         //subscribe notifications
                         mBluetoothLeService.setCharacteristicNotification(mMeasurementCharacteristic, true);
-                        mIsOff = true;
                     }
                     else {
                         knob.setEnabled(true);
