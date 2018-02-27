@@ -145,14 +145,20 @@ public class Multimeter extends AppCompatActivity {
                     value.setBackgroundResource(R.drawable.measback);
                     if (mode == 4) {
                         knobnewState = R_STATE;
-                        units.setText("Ω");
+                        if (!isHold) {
+                            units.setText("Ω");
+                        }
                     }
                     else if (mode == 3) {
                         knobnewState = MA500_STATE;
-                        units.setText("mA");
+                        if (!isHold) {
+                            units.setText("mA");
+                        }
                     }
                     else {
-                        units.setText("V");
+                        if (!isHold) {
+                            units.setText("V");
+                        }
                         if (mode == 1) {
                             knobnewState = V3_STATE;
                         }
