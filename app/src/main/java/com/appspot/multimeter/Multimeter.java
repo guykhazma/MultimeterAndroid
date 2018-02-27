@@ -37,11 +37,17 @@ public class Multimeter extends AppCompatActivity {
     public static final int V3_STATE = 3;
     public static final int V10_STATE = 4;
 
+    // dimm colors
+    public static final int FULL_DIM = 0xFF000000;
+    public static final int HALF_DIM = 0x80000000;
+    public static final int EMPTY_DIM = 0x00000000;
+
 
     private Knob knob;
     private TextView value;
     private TextView units;
     private TextView hold;
+    private int dimState;
 
     private BluetoothLeService mBluetoothLeService;
     private String mDeviceName;
@@ -190,6 +196,10 @@ public class Multimeter extends AppCompatActivity {
         Typeface myTypeface = Typeface.createFromAsset(getAssets(), "fonts/digital.ttf");
         value.setTypeface(myTypeface);
 
+        // set value color to highest dimm
+        dimState = FULL_DIM;
+        value.setTextColor(dimState);
+
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
@@ -275,5 +285,22 @@ public class Multimeter extends AppCompatActivity {
         });
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    public void dimOnClick(View v){
+        // Disconnect and return to intro page
+        switch (dimState) {
+            case FULL_DIM:
+                dimState = HALF_DIM;
+                break;
+            case HALF_DIM:
+                dimState = EMPTY_DIM;
+                break;
+            case EMPTY_DIM:
+            default:
+                dimState = FULL_DIM;
+                break;
+        }
+        value.setTextColor(dimState);
     }
 }
