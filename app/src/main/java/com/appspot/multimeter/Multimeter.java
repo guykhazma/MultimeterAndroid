@@ -39,7 +39,9 @@ public class Multimeter extends AppCompatActivity {
 
     // dimm colors
     public static final int FULL_DIM = 0xFF000000;
+    public static final int THREEQUARTER_DIM = 0xBF000000;
     public static final int HALF_DIM = 0x80000000;
+    public static final int QUARTER_DIM = 0x40000000;
     public static final int EMPTY_DIM = 0x00000000;
 
 
@@ -48,6 +50,7 @@ public class Multimeter extends AppCompatActivity {
     private TextView units;
     private TextView hold;
     private int dimState;
+    private boolean isHold;
 
     private BluetoothLeService mBluetoothLeService;
     private String mDeviceName;
@@ -192,6 +195,9 @@ public class Multimeter extends AppCompatActivity {
         units = (TextView) findViewById(R.id.txtUnits);
         hold = (TextView) findViewById(R.id.txthold);
 
+        // at the start hold is not active
+        isHold = false;
+
         // set value font
         Typeface myTypeface = Typeface.createFromAsset(getAssets(), "fonts/digital.ttf");
         value.setTypeface(myTypeface);
@@ -288,12 +294,18 @@ public class Multimeter extends AppCompatActivity {
     }
 
     public void dimOnClick(View v){
-        // Disconnect and return to intro page
+        // switch according to dim state
         switch (dimState) {
             case FULL_DIM:
+                dimState = THREEQUARTER_DIM;
+                break;
+            case THREEQUARTER_DIM:
                 dimState = HALF_DIM;
                 break;
             case HALF_DIM:
+                dimState = QUARTER_DIM;
+                break;
+            case QUARTER_DIM:
                 dimState = EMPTY_DIM;
                 break;
             case EMPTY_DIM:
@@ -302,5 +314,26 @@ public class Multimeter extends AppCompatActivity {
                 break;
         }
         value.setTextColor(dimState);
+    }
+
+    public void holdOnClick(View v){
+        // cancel hold if hold is active otherwise make hold active
+        if (isHold) {
+            isHold = false;
+            hold.setTextColor(Color.WHITE);
+
+        }
+        else {
+            // save the value at the time of the pressing aside
+            CharSequence holdValue = value.getText();
+            CharSequence holdUnits = units.getText();
+            isHold = true;
+            hold.setTextColor(Color.RED);
+            //unsubscribe notifications
+            mBluetoothLeService.setCharacteristicNotification(mMeasurementCharacteristic, false);
+            // make sure hold values appear
+            value.setText(holdValue);
+            units.setText(holdUnits);
+        }
     }
 }
