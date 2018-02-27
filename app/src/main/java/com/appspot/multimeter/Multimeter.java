@@ -196,7 +196,10 @@ public class Multimeter extends AppCompatActivity {
                     value.setText("");
                 }
                 else {
-                    value.setText("0.00");
+                    // reset only if this is not hold
+                    if (!isHold) {
+                        value.setText("0.00");
+                    }
                 }
                 knob.setEnabled(true);
             }
@@ -226,6 +229,7 @@ public class Multimeter extends AppCompatActivity {
         // set value color to highest dimm
         dimState = FULL_DIM;
         value.setTextColor(dimState);
+        units.setTextColor(dimState);
 
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
@@ -335,6 +339,7 @@ public class Multimeter extends AppCompatActivity {
                 break;
         }
         value.setTextColor(dimState);
+        units.setTextColor(dimState);
     }
 
     public void holdOnClick(View v){
@@ -349,6 +354,25 @@ public class Multimeter extends AppCompatActivity {
                 hold.setTextColor(Color.WHITE);
                 // subscribe to notifications again
                 mBluetoothLeService.setCharacteristicNotification(mMeasurementCharacteristic, true);
+                // set units according to state (state can be changed during halt)
+                switch (knob.getState()) {
+                    case R_STATE:
+                        units.setText("Ω");
+                        break;
+                    case MA500_STATE:
+                        units.setText("mA");
+                        break;
+                    case OFF_STATE:
+                        units.setText("");
+                        // deal
+                        break;
+                    case V3_STATE:
+                    case V10_STATE:
+                        units.setText("V");
+                        break;
+                    default:
+                        break;
+                }
             } else {
                 // save the value at the time of the pressing
                 CharSequence holdValue = value.getText();
