@@ -59,6 +59,7 @@ public class Multimeter extends AppCompatActivity {
     private boolean mIsOff = true;
 
     private static final String TAG = Multimeter.class.getSimpleName();
+    private static final int OVERFLOW = 0xffffffff;
 
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -154,9 +155,9 @@ public class Multimeter extends AppCompatActivity {
                         }
                     }
                     if(mIsOff) {
+                        mIsOff = false;
                         //subscribe notifications
                         mBluetoothLeService.setCharacteristicNotification(mMeasurementCharacteristic, true);
-                        mIsOff = true;
                     }
                     else {
                         knob.setEnabled(true);
@@ -166,10 +167,24 @@ public class Multimeter extends AppCompatActivity {
                     knob.setState(knobnewState);
                 }
             } else if (BluetoothLeService.ACTION_MEASUREMENT_AVAILABLE.equals(action)) {
-                double measValue;
-                measValue = (double) intent.getLongExtra(BluetoothLeService.DATA,-1) / 1000000;
-                // update multimeter value
-                value.setText("" + measValue);
+                long measValueInMicro = intent.getLongExtra(BluetoothLeService.DATA,-1);
+                //check if overflow
+                if((int) measValueInMicro == OVERFLOW) {
+                    value.setText(R.string.overflow);
+                }
+                else {
+                    //convert micro to the desired prefix
+                    double measValue;
+                    if(knob.getState() == MA500_STATE) {
+                        //milli
+                        measValue = (double) measValueInMicro / 1000;
+                    }
+                    else {
+                        //none
+                        measValue = (double) measValueInMicro / 1000000;
+                    }
+                    value.setText("" + measValue);
+                }
             } else if (BluetoothLeService.ACTION_NOTIFICATION_ENABLED.equals(action)) {
                 if(mIsOff) {
                     value.setText("");
