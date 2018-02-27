@@ -16,6 +16,7 @@ import android.opengl.Visibility;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -274,24 +275,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void scanClick(View v) {
-        // make sure bluetooth enabled
-        if (!mBluetoothAdapter.isEnabled()) {
-            if (!mBluetoothAdapter.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            }
-        }
 
-        // display only if bluetooth enabled
-        if (mBluetoothAdapter.isEnabled()) {
-            // Initializes list view adapter.
-            mLeDeviceListAdapter.clear();
-            scanList.setAdapter(mLeDeviceListAdapter);
-            scanList.setVisibility(View.GONE);
-            choose.setVisibility(View.GONE);
-            voltmeterImage.setVisibility(View.VISIBLE);
-            // start scan automatically
-            scanLeDevice(true);
+        // make sure location permissions enabled since it is needed for ble scan
+        if (!(ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED)) {
+            Toast.makeText(getApplicationContext(), "Please enable location permissions", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            // make sure bluetooth enabled
+            if (!mBluetoothAdapter.isEnabled()) {
+                if (!mBluetoothAdapter.isEnabled()) {
+                    Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+                }
+            }
+
+            // display only if bluetooth enabled
+            if (mBluetoothAdapter.isEnabled()) {
+                // Initializes list view adapter.
+                mLeDeviceListAdapter.clear();
+                scanList.setAdapter(mLeDeviceListAdapter);
+                scanList.setVisibility(View.GONE);
+                choose.setVisibility(View.GONE);
+                voltmeterImage.setVisibility(View.VISIBLE);
+                // start scan automatically
+                scanLeDevice(true);
+            }
         }
     }
 }

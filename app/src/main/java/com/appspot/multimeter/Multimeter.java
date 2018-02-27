@@ -134,6 +134,12 @@ public class Multimeter extends AppCompatActivity {
                     hold.setTextColor(Color.WHITE);
                     //unsubscribe notifications
                     mBluetoothLeService.setCharacteristicNotification(mMeasurementCharacteristic, false);
+                    // reset hold
+                    isHold = false;
+                    hold.setTextColor(Color.WHITE);
+                    // reset dim
+                    dimState = FULL_DIM;
+                    value.setTextColor(dimState);
                 }
                 else {
                     value.setBackgroundResource(R.drawable.measback);
@@ -332,23 +338,29 @@ public class Multimeter extends AppCompatActivity {
     }
 
     public void holdOnClick(View v){
-        // cancel hold if hold is active otherwise make hold active
-        if (isHold) {
-            isHold = false;
-            hold.setTextColor(Color.WHITE);
-
+        // if the multimeter is off ignore hold press
+        if (mIsOff) {
+            Toast.makeText(getApplicationContext(), "Multimeter is off", Toast.LENGTH_SHORT).show();
         }
         else {
-            // save the value at the time of the pressing aside
-            CharSequence holdValue = value.getText();
-            CharSequence holdUnits = units.getText();
-            isHold = true;
-            hold.setTextColor(Color.RED);
-            //unsubscribe notifications
-            mBluetoothLeService.setCharacteristicNotification(mMeasurementCharacteristic, false);
-            // make sure hold values appear
-            value.setText(holdValue);
-            units.setText(holdUnits);
+            // cancel hold if hold is active otherwise make hold active
+            if (isHold) {
+                isHold = false;
+                hold.setTextColor(Color.WHITE);
+                // subscribe to notifications again
+                mBluetoothLeService.setCharacteristicNotification(mMeasurementCharacteristic, true);
+            } else {
+                // save the value at the time of the pressing
+                CharSequence holdValue = value.getText();
+                CharSequence holdUnits = units.getText();
+                isHold = true;
+                hold.setTextColor(Color.RED);
+                //unsubscribe notifications
+                mBluetoothLeService.setCharacteristicNotification(mMeasurementCharacteristic, false);
+                // make sure hold values appear
+                value.setText(holdValue);
+                units.setText(holdUnits);
+            }
         }
     }
 }
